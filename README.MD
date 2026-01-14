@@ -1,11 +1,10 @@
 # Bringing the Dual-LLM Pattern to Practice in Google ADK for Deterministic AI Agent Security against Prompt Injection
 
 <p align="center">
-  <img src="https://img.shields.io/badge/Conference-ISAROB%202026-blue?style=for-the-badge&logo=google-scholar&logoColor=white" alt="ISAROB 2026">
+  <img src="https://img.shields.io/badge/Conference-ISAROB%202026-blue?style=for-the-badge&logo=google-scholar&logoColor=white" alt="AROB 2026">
   <img src="https://img.shields.io/badge/Python-3.12-3776AB?style=for-the-badge&logo=python&logoColor=white" alt="Python 3.12">
   <img src="https://img.shields.io/badge/Docker-Supported-2496ED?style=for-the-badge&logo=docker&logoColor=white" alt="Docker">
   <img src="https://img.shields.io/badge/Framework-Google%20ADK-34A853?style=for-the-badge&logo=google&logoColor=white" alt="Google ADK">
-  <img src="https://img.shields.io/badge/License-MIT-green?style=for-the-badge" alt="License">
 </p>
 
 - **Authors:** Huang Shuo¹ and [Shin-Jie Lee](https://sites.google.com/view/shinjielee/)²
