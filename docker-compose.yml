@@ -1,0 +1,39 @@
+version: '3.8'
+
+services:
+  # === Service 1: Q-LLM Server (Isolation Zone) ===
+  qllm-server:
+    build: .
+    container_name: dual-llm-server
+    command: ["python", "scripts/start_qllm.py"]
+    ports:
+      - "8001:8001"  # Expose port to localhost
+    env_file: .env   # Load environment variables
+    networks:
+      - dual-net
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8001/health"]
+      interval: 10s
+      timeout: 5s
+      retries: 3
+
+  # === Service 2: Benchmark Runner (Experiment Zone) ===
+  benchmark-runner:
+    build: .
+    container_name: dual-llm-runner
+    # Command to run all benchmarks
+    command: ["python", "scripts/run_all.py"] 
+    depends_on:
+      - qllm-server  # Wait for server to start
+    environment:
+      - QLLM_URL=http://qllm-server:8001  # Internal Docker DNS
+    env_file: .env
+    networks:
+      - dual-net
+    # Allow connection to host if needed
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+
+networks:
+  dual-net:
+    driver: bridge
