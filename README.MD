@@ -27,7 +27,7 @@ The system consists of the following core components:
 3. **Key–Value Translation Plugin:** A boundary filter that intercepts all outputs from the Q-LLM and tools. It replaces raw values with symbolic keys (e.g., `key:8f92...`) before they reach the P-LLM's context.
 4. **Security Policy Callback:** Utilizes ADK’s `before_tool_callback` to enforce deterministic, capability-based access control (e.g., allowlisting IBANs) before any action is executed.
 
-<img src="img/system.png" width="600">
+<img src="img/system.png" width="400">
 
 ## Repository Structure
 
