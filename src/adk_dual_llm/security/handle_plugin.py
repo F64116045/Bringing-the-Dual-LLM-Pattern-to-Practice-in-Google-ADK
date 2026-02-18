@@ -19,7 +19,7 @@ class HandlePlugin(BasePlugin):
         Initialize the plugin with a reference to the HandleManager.
         """
         super().__init__(name="handle_plugin")
-        self.handle_manager = handle_manager
+        object.__setattr__(self, "handle_manager", handle_manager)
 
     # ---------------- Agent Callbacks ----------------
     
