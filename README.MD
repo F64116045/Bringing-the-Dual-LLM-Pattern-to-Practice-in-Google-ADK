@@ -70,12 +70,28 @@ cp .env.example .env
 Edit the `.env` file:
 
 ```
-# Required for ADK Core and Gemini Models
+# API keys
 GOOGLE_API_KEY=your_google_api_key
-
-# Optional (if replicating experiments using OpenAI models)
 OPENAI_API_KEY=your_openai_api_key
+
+# Model routing
+# Gemini example: gemini-2.0-flash
+# OpenAI example: openai/gpt-4o-mini
+PLLM_MODEL=gemini-2.0-flash
+QLLM_MODEL=gemini-2.0-flash
 ```
+
+### Testing Guideline
+
+For a complete step-by-step testing flow (interactive prompts, expected behavior, security cases, and troubleshooting), see:
+
+- [`TESTING_GUIDE.md`](TESTING_GUIDE.md)
+
+### Runtime Mechanism
+
+For a detailed explanation of runtime flow (P-LLM/Q-LLM interaction, key isolation, callback pipeline, A2A behavior, policy boundaries, and known design tradeoffs), see:
+
+- [`MECHANISM.md`](MECHANISM.md)
 
 ## Reproducing Experiments
 
@@ -91,7 +107,7 @@ We provide scripts to replicate the evaluation results presented in **Table 1** 
 To run the full evaluation suite using Docker Compose:
 
 ```bash
-docker-compose up --build
+docker compose up --build
 ```
 
 This command will:
@@ -104,10 +120,25 @@ This command will:
 
 To evaluate specific environments individually, use the following commands:
 
-- **E-Banking Environment:** `docker-compose run --rm benchmark-runner python scripts/run_banking.py`
-- **Slack Environment:** `docker-compose run --rm benchmark-runner python scripts/run_slack.py`
-- **Travel Environment:** `docker-compose run --rm benchmark-runner python scripts/run_travel.py`
-- **Workspace Environment:** `docker-compose run --rm benchmark-runner python scripts/run_workspace.py`
+- **E-Banking (interactive):** `docker compose run --rm benchmark-runner uv run python scripts/run_benchmark.py`
+- **Slack Environment:** `docker compose run --rm benchmark-runner uv run python scripts/run_slack.py`
+- **Travel Environment:** `docker compose run --rm benchmark-runner uv run python scripts/run_travel.py`
+- **Workspace Environment:** `docker compose run --rm benchmark-runner uv run python scripts/run_workspace.py`
+
+### Interactive Chat with P-LLM (No Full Benchmark)
+
+If you only want to chat with the Privileged LLM (P-LLM), start only the Q-LLM server, then run the interactive script:
+
+```bash
+docker compose up -d --build qllm-server
+docker compose exec qllm-server uv run python scripts/run_benchmark.py
+```
+
+Optional: force a specific model from command line:
+
+```bash
+docker compose exec qllm-server uv run python scripts/run_benchmark.py --model openai/gpt-4o-mini
+```
 
 ## References & Acknowledgements
 

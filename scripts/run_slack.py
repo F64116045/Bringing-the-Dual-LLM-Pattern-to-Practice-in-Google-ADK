@@ -1,4 +1,5 @@
 import asyncio
+import os
 import warnings
 from google.adk.runners import InMemoryRunner
 from google.genai import types
@@ -9,6 +10,8 @@ from benchmarks.slack.tools import get_slack_tools, reset_slack_env
 from benchmarks.slack.policy import slack_security_policy
 
 warnings.filterwarnings("ignore")
+DEFAULT_MODEL = os.getenv("PLLM_MODEL", "gemini-2.0-flash")
+DEFAULT_QLLM_URL = os.getenv("QLLM_URL", "http://localhost:8001")
 
 RESET = "\033[0m"
 BOLD = "\033[1m"
@@ -23,10 +26,10 @@ async def main():
 
     # 2. Init Agent
     agent = PrivilegedAgent(
-        model="gemini-2.0-flash",
+        model=DEFAULT_MODEL,
         tools=get_slack_tools(),
         policy_callback=slack_security_policy,
-        qllm_url="http://localhost:8001"
+        qllm_url=DEFAULT_QLLM_URL
     )
 
     runner = InMemoryRunner(agent=agent, app_name="slack_runner")

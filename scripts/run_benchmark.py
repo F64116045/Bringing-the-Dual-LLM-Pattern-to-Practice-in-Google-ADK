@@ -1,5 +1,6 @@
 import asyncio
 import argparse
+import os
 import warnings
 from google.adk.runners import InMemoryRunner
 from google.genai import types
@@ -21,7 +22,16 @@ GREEN = "\033[92m"
 BLUE = "\033[94m"
 PURPLE = "\033[95m"
 
-async def main(model_name: str = "gemini-2.0-flash"):
+DEFAULT_MODEL = os.getenv("PLLM_MODEL", "gemini-2.0-flash")
+DEFAULT_QLLM_URL = os.getenv("QLLM_URL", "http://localhost:8001")
+
+
+def _sanitize_user_text(text: str) -> str:
+    """Replace invalid surrogate code points to avoid JSON serialization errors."""
+    return text.encode("utf-8", errors="replace").decode("utf-8")
+
+
+async def main(model_name: str = DEFAULT_MODEL):
     print(f"{PURPLE}{BOLD}=== Initializing Dual LLM Banking Agent ==={RESET}")
 
     # 1. Instantiate the P-LLM (This automatically sets up KeyPlugin & Q-LLM tool)
@@ -29,7 +39,7 @@ async def main(model_name: str = "gemini-2.0-flash"):
         model=model_name,
         tools=get_banking_tools(),          # Inject Banking Tools
         policy_callback=banking_security_policy, # Inject Banking Policy
-        qllm_url="http://localhost:8001"    # Point to Q-LLM Server
+        qllm_url=DEFAULT_QLLM_URL           # Point to Q-LLM Server
     )
 
     # 2. Setup Runner
@@ -48,6 +58,7 @@ async def main(model_name: str = "gemini-2.0-flash"):
             user_input = input(f"{GREEN}{BOLD}User: {RESET}").strip()
             if not user_input: continue
             if user_input.lower() in ["exit", "quit"]: break
+            user_input = _sanitize_user_text(user_input)
 
             print(f"\n{BLUE}{BOLD}Agent: {RESET}", end="", flush=True)
             
@@ -71,7 +82,7 @@ async def main(model_name: str = "gemini-2.0-flash"):
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
-    parser.add_argument("--model", default="gemini-2.0-flash", help="Model name for P-LLM")
+    parser.add_argument("--model", default=DEFAULT_MODEL, help="Model name for P-LLM")
     args = parser.parse_args()
     
     asyncio.run(main(args.model))

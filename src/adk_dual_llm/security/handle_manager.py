@@ -35,6 +35,13 @@ class HandleManager:
         
         return self._store[key]["value"]
 
+    def get_type_hint(self, key: str) -> Optional[str]:
+        """Returns the stored type hint for a handle, or None if not found."""
+        item = self._store.get(key)
+        if not item:
+            return None
+        return item.get("type")
+
     def clear(self) -> None:
         """Resets the storage. Useful for clearing state between episodes."""
         self._store.clear()

@@ -1,18 +1,16 @@
-version: '3.8'
-
 services:
   # === Service 1: Q-LLM Server (Isolation Zone) ===
   qllm-server:
     build: .
     container_name: dual-llm-server
-    command: ["python", "scripts/start_qllm.py"]
+    command: ["uv", "run", "python", "scripts/start_qllm.py"]
     ports:
       - "8001:8001"  # Expose port to localhost
     env_file: .env   # Load environment variables
     networks:
       - dual-net
     healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost:8001/health"]
+      test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://localhost:8001/.well-known/agent-card.json', timeout=5)"]
       interval: 10s
       timeout: 5s
       retries: 3
@@ -21,8 +19,8 @@ services:
   benchmark-runner:
     build: .
     container_name: dual-llm-runner
-    # Command to run all benchmarks
-    command: ["python", "scripts/run_all.py"] 
+    # Command to run all non-interactive benchmarks
+    command: ["uv", "run", "python", "scripts/run_all.py"] 
     depends_on:
       - qllm-server  # Wait for server to start
     environment:

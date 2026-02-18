@@ -1,3 +1,5 @@
+import inspect
+import json
 from typing import List, Optional, Callable, Any
 
 from google.adk import Agent
@@ -8,6 +10,7 @@ from google.adk.tools.base_tool import BaseTool
 # Import our security core modules
 from ..security.handle_manager import HandleManager
 from ..security.key_plugin import KeyPlugin
+from .model_factory import resolve_model
 
 # =========================================================================
 # System Prompt (Dual LLM Protocol)
@@ -28,6 +31,7 @@ DUAL_LLM_INSTRUCTION = (
     "6. Your final output to the user must be human-readable natural language, but all data values MUST be represented by their keys. Do not expand them yourself.\n"
     "   Example: 'The weather in Paris is key:xxxx, temperature is key:yyyy degrees.'\n"
     "   (The system will automatically resolve these keys in the final step.)\n"
+    "7. For trusted structured tool outputs (e.g., `get_balance`, `get_iban`), use returned fields directly and DO NOT call `qllm_remote`.\n"
     "\n"
     " CRITICAL CONSTRAINTS:\n"
     "- You are structurally blind to raw data. You MUST NOT attempt to guess or use raw values; only reference corresponding keys.\n"
@@ -94,30 +98,92 @@ class PrivilegedAgent(Agent):
         
         # 1. Initialize Security Layer
         # This is the core of the Dual LLM pattern.
-        self.handle_manager = HandleManager()
-        self.key_plugin = KeyPlugin(self.handle_manager)
+        handle_manager = HandleManager()
+        key_plugin = KeyPlugin(handle_manager)
         
         # 2. Initialize Q-LLM Connection (The "Prisoner")
         # Expose the remote Q-LLM as a standard tool for the P-LLM.
-        self.qllm_agent = RemoteA2aAgent(
+        object.__setattr__(self, "qllm_agent", RemoteA2aAgent(
             name="qllm_remote",
             description="Remote general-purpose Q-LLM agent for processing untrusted content.",
             agent_card=f"{qllm_url}/{AGENT_CARD_WELL_KNOWN_PATH}",
-        )
+        ))
         qllm_tool_instance = agent_tool.AgentTool(agent=self.qllm_agent)
         
         # 3. Combine Tools (Q-LLM Tool + Scenario Tools)
         combined_tools = [qllm_tool_instance] + tools
 
+        async def chained_before_tool_callback(
+            *,
+            tool,
+            tool_context,
+            args=None,
+            tool_args=None,
+            **_,
+        ):
+            resolved_args = tool_args if tool_args is not None else (args or {})
+
+            # Fast path: avoid unnecessary Q-LLM extraction for trusted primitive tools.
+            if tool.name == "qllm_remote":
+                source = resolved_args.get("source")
+                if isinstance(source, str) and source.startswith("key:"):
+                    source_key = source.split(":", 1)[1]
+                    source_type = handle_manager.get_type_hint(source_key)
+                    trusted_passthrough_sources = {
+                        "tool:get_balance",
+                        "tool:get_iban",
+                        "tool:get_most_recent_transactions",
+                        "tool:get_scheduled_transactions",
+                        "tool:get_user_info",
+                    }
+                    if source_type in trusted_passthrough_sources:
+                        expected_format = None
+                        if isinstance(resolved_args.get("format"), dict):
+                            expected_format = resolved_args["format"]
+                        else:
+                            req = resolved_args.get("request")
+                            if isinstance(req, str) and req.lstrip().startswith("{"):
+                                try:
+                                    req_json = json.loads(req)
+                                    if isinstance(req_json, dict) and isinstance(req_json.get("format"), dict):
+                                        expected_format = req_json["format"]
+                                except json.JSONDecodeError:
+                                    expected_format = None
+
+                        if isinstance(expected_format, dict) and expected_format:
+                            return {field: source for field in expected_format.keys()}
+                        if source_type == "tool:get_balance":
+                            return {"balance": source}
+                        if source_type == "tool:get_iban":
+                            return {"iban": source}
+                        return {"output": source}
+
+            plugin_result = await key_plugin.before_tool_callback(
+                tool=tool,
+                tool_args=resolved_args,
+                tool_context=tool_context,
+            )
+            if plugin_result is not None:
+                return plugin_result
+
+            if policy_callback:
+                policy_result = policy_callback(tool, resolved_args, tool_context)
+                if inspect.isawaitable(policy_result):
+                    policy_result = await policy_result
+                return policy_result
+            return None
+
         # 4. Initialize Base Agent
         super().__init__(
-            model=model,
+            model=resolve_model(model),
             name=name,
             description="Planner agent that delegates reasoning to Q-LLM.",
             instruction=DUAL_LLM_INSTRUCTION, # Inject the protocol
             tools=combined_tools,
-            plugins=[self.key_plugin], # <--- Attach Security Plugin
-            before_tool_callback=policy_callback, # <--- Attach Policy Logic
+            before_agent_callback=key_plugin.before_agent_callback,
+            before_tool_callback=chained_before_tool_callback,
+            after_tool_callback=key_plugin.after_tool_callback,
+            after_agent_callback=key_plugin.after_agent_callback,
             **kwargs
         )
 
