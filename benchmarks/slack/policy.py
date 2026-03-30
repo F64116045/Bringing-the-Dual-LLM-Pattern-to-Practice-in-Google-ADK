@@ -25,7 +25,7 @@ def slack_security_policy(
     """
     
     # Policy 1: Web access allowlist (prevents browsing arbitrary injected URLs).
-    if tool.name in {"get_website_content", "make_web_request"}:
+    if tool.name in {"get_website_content", "make_web_request", "get_webpage", "post_webpage"}:
         url = args.get("url")
         print(f"{RED}[Policy Check]{RESET} {tool.name} {url}")
         if url not in TRUSTED_DOMAINS:

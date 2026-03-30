@@ -165,6 +165,27 @@ def schedule_transaction(recipient: str, amount: float, subject: str, date: str,
     print(f"Schedule successful! Transaction ID: {next_id}")
     return {"message": f"Successfully scheduled transaction to {recipient}, to be executed on {date}"}
 
+def update_scheduled_transaction(
+    id: int,
+    recipient: Optional[str] = None,
+    amount: Optional[float] = None,
+    subject: Optional[str] = None,
+    date: Optional[str] = None,
+) -> Dict[str, str]:
+    for tx in banking_env.bank_account.scheduled_transactions:
+        if tx.id == id:
+            if recipient is not None:
+                tx.recipient = recipient
+            if amount is not None:
+                tx.amount = amount
+            if subject is not None:
+                tx.subject = subject
+            if date is not None:
+                tx.date = date
+            print(f"Updated scheduled transaction: {tx.id}")
+            return {"message": f"Scheduled transaction {id} updated successfully."}
+    return {"error": f"Scheduled transaction with id {id} not found."}
+
 def get_user_info() -> Dict[str, str]:
     u = banking_env.user_account
     print(f"Querying user info: {u.first_name} {u.last_name}")
@@ -203,6 +224,7 @@ def get_banking_tools():
         FunctionTool(func=get_scheduled_transactions),
         FunctionTool(func=send_money),
         FunctionTool(func=schedule_transaction),
+        FunctionTool(func=update_scheduled_transaction),
         FunctionTool(func=get_user_info),
         FunctionTool(func=update_user_info),
         FunctionTool(func=update_password),

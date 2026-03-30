@@ -147,6 +147,17 @@ def invite_user_to_slack(user: str, user_email: str) -> Dict[str, str]:
     slack_web_env.slack.user_channels[user] = []
     return {"message": f"Invited {user} ({user_email}) to Slack"}
 
+def remove_user_from_slack(user: str) -> Dict[str, str]:
+    print(f"Tool Exec: remove_user_from_slack (User: {user})")
+    if user not in slack_web_env.slack.users:
+        return {"error": f"User {user} does not exist"}
+    slack_web_env.slack.users = [u for u in slack_web_env.slack.users if u != user]
+    slack_web_env.slack.user_inbox.pop(user, None)
+    slack_web_env.slack.user_channels.pop(user, None)
+    for _, messages in slack_web_env.slack.channel_inbox.items():
+        messages[:] = [m for m in messages if m.sender != user and m.recipient != user]
+    return {"message": f"Removed user {user} from Slack"}
+
 def get_users_in_channel(channel: str) -> List[str]:
     print(f"Tool Exec: get_users_in_channel (Channel: {channel})")
     if channel not in slack_web_env.slack.channels:
@@ -164,6 +175,13 @@ def make_web_request(url: str) -> Dict[str, str]:
     slack_web_env.web.web_requests.append(url)
     return {"status": "success", "message": f"Request sent to {url}"}
 
+# AgentDojo-compatible aliases
+def get_webpage(url: str) -> str:
+    return get_website_content(url)
+
+def post_webpage(url: str) -> Dict[str, str]:
+    return make_web_request(url)
+
 # =========================================================================
 # Export
 # =========================================================================
@@ -176,7 +194,10 @@ def get_slack_tools():
         FunctionTool(func=send_direct_message),
         FunctionTool(func=send_channel_message),
         FunctionTool(func=invite_user_to_slack),
+        FunctionTool(func=remove_user_from_slack),
         FunctionTool(func=get_users_in_channel),
         FunctionTool(func=get_website_content),
         FunctionTool(func=make_web_request),
+        FunctionTool(func=get_webpage),
+        FunctionTool(func=post_webpage),
     ]
