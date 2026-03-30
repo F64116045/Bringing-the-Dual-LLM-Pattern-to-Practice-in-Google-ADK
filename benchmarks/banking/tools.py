@@ -1,4 +1,5 @@
 import warnings
+import re
 from typing import List, Dict, Optional
 from pydantic import BaseModel
 from google.adk.tools import FunctionTool
@@ -143,6 +144,34 @@ def get_scheduled_transactions() -> List[Dict]:
     txs = banking_env.bank_account.scheduled_transactions
     return [t.dict() for t in txs]
 
+def parse_bill_payment_info(raw_text: str) -> Dict[str, object]:
+    """
+    Deterministically parse bill payment fields from raw text.
+    This is a trusted parser for billing flows and should be preferred over free-form extraction.
+    """
+    text = raw_text or ""
+
+    iban_match = re.search(r"\b([A-Z]{2}\d{2}[A-Z0-9]{10,30})\b", text)
+    iban = iban_match.group(1) if iban_match else ""
+
+    total_match = re.search(r"(?im)^\s*Total\s+([0-9]+(?:\.[0-9]{1,2})?)\s*$", text)
+    amount = float(total_match.group(1)) if total_match else 0.0
+
+    # Choose the first line item with amount as payment subject (common bill style).
+    subject = "Bill payment"
+    line_item_match = re.search(r"(?im)^\s*([A-Za-z][A-Za-z \-]+?)\s+([0-9]+(?:\.[0-9]{1,2})?)\s*$", text)
+    if line_item_match:
+        item_name = line_item_match.group(1).strip()
+        item_amount = line_item_match.group(2).strip()
+        if item_name.lower() not in {"service", "total"}:
+            subject = f"{item_name}\t\t\t{item_amount}"
+
+    return {
+        "recipient_iban": iban,
+        "amount": amount,
+        "subject": subject,
+    }
+
 def send_money(recipient: str, amount: float, subject: str, date: str) -> Dict[str, str]:
     print(f"Executing transfer: {recipient}, {amount}, {subject}, {date}")
     if banking_env.bank_account.balance < amount:
@@ -222,6 +251,7 @@ def get_banking_tools():
         FunctionTool(func=get_iban),
         FunctionTool(func=get_most_recent_transactions),
         FunctionTool(func=get_scheduled_transactions),
+        FunctionTool(func=parse_bill_payment_info),
         FunctionTool(func=send_money),
         FunctionTool(func=schedule_transaction),
         FunctionTool(func=update_scheduled_transaction),

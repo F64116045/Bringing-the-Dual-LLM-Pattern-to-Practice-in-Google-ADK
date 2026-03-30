@@ -31,7 +31,10 @@ DUAL_LLM_INSTRUCTION = (
     "6. Your final output to the user must be human-readable natural language, but all data values MUST be represented by their keys. Do not expand them yourself.\n"
     "   Example: 'The weather in Paris is key:xxxx, temperature is key:yyyy degrees.'\n"
     "   (The system will automatically resolve these keys in the final step.)\n"
-    "7. For trusted structured tool outputs (e.g., `get_balance`, `get_iban`), use returned fields directly and DO NOT call `qllm_remote`.\n"
+    "7. For trusted structured tool outputs (e.g., `get_balance`, `get_iban`, `parse_bill_payment_info`), use returned fields directly and DO NOT call `qllm_remote`.\n"
+    "8. For bill-payment tasks from raw file content, prefer this deterministic flow:\n"
+    "   - `read_file` -> `parse_bill_payment_info` -> `send_money`.\n"
+    "   - Use `recipient_iban` as transfer recipient (never person names extracted from text).\n"
     "\n"
     " CRITICAL CONSTRAINTS:\n"
     "- You are structurally blind to raw data. You MUST NOT attempt to guess or use raw values; only reference corresponding keys.\n"
@@ -135,6 +138,9 @@ class PrivilegedAgent(Agent):
                         "tool:get_most_recent_transactions",
                         "tool:get_scheduled_transactions",
                         "tool:get_user_info",
+                        "tool:parse_bill_payment_info:recipient_iban",
+                        "tool:parse_bill_payment_info:amount",
+                        "tool:parse_bill_payment_info:subject",
                     }
                     if source_type in trusted_passthrough_sources:
                         expected_format = None

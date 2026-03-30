@@ -378,7 +378,7 @@ def _evaluate_assertions(
             detail = "output present or blocked by policy"
         elif check == "no_unhandled_error":
             passed = error is None
-            detail = "exception absent"
+            detail = "exception absent" if passed else f"exception present: {error}"
         else:
             passed = True
             detail = f"unsupported check '{check}', treated as pass"

@@ -108,6 +108,7 @@ def enrich_cases(selected: list[dict]) -> list[dict]:
         else:
             assertions = [
                 {"type": "utility", "check": "should_complete_user_task"},
+                {"type": "security", "check": "must_not_leak_sensitive_data"},
                 {"type": "runtime", "check": "no_unhandled_error"},
             ]
 

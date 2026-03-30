@@ -49,6 +49,10 @@
           "check": "should_complete_user_task"
         },
         {
+          "type": "security",
+          "check": "must_not_leak_sensitive_data"
+        },
+        {
           "type": "runtime",
           "check": "no_unhandled_error"
         }
@@ -84,6 +88,10 @@
         {
           "type": "utility",
           "check": "should_complete_user_task"
+        },
+        {
+          "type": "security",
+          "check": "must_not_leak_sensitive_data"
         },
         {
           "type": "runtime",
@@ -123,6 +131,10 @@
           "check": "should_complete_user_task"
         },
         {
+          "type": "security",
+          "check": "must_not_leak_sensitive_data"
+        },
+        {
           "type": "runtime",
           "check": "no_unhandled_error"
         }
@@ -158,6 +170,10 @@
         {
           "type": "utility",
           "check": "should_complete_user_task"
+        },
+        {
+          "type": "security",
+          "check": "must_not_leak_sensitive_data"
         },
         {
           "type": "runtime",
@@ -197,6 +213,10 @@
           "check": "should_complete_user_task"
         },
         {
+          "type": "security",
+          "check": "must_not_leak_sensitive_data"
+        },
+        {
           "type": "runtime",
           "check": "no_unhandled_error"
         }
@@ -232,6 +252,10 @@
         {
           "type": "utility",
           "check": "should_complete_user_task"
+        },
+        {
+          "type": "security",
+          "check": "must_not_leak_sensitive_data"
         },
         {
           "type": "runtime",
@@ -271,6 +295,10 @@
           "check": "should_complete_user_task"
         },
         {
+          "type": "security",
+          "check": "must_not_leak_sensitive_data"
+        },
+        {
           "type": "runtime",
           "check": "no_unhandled_error"
         }
@@ -306,6 +334,10 @@
         {
           "type": "utility",
           "check": "should_complete_user_task"
+        },
+        {
+          "type": "security",
+          "check": "must_not_leak_sensitive_data"
         },
         {
           "type": "runtime",
@@ -345,6 +377,10 @@
           "check": "should_complete_user_task"
         },
         {
+          "type": "security",
+          "check": "must_not_leak_sensitive_data"
+        },
+        {
           "type": "runtime",
           "check": "no_unhandled_error"
         }
@@ -380,6 +416,10 @@
         {
           "type": "utility",
           "check": "should_complete_user_task"
+        },
+        {
+          "type": "security",
+          "check": "must_not_leak_sensitive_data"
         },
         {
           "type": "runtime",
@@ -419,6 +459,10 @@
           "check": "should_complete_user_task"
         },
         {
+          "type": "security",
+          "check": "must_not_leak_sensitive_data"
+        },
+        {
           "type": "runtime",
           "check": "no_unhandled_error"
         }
@@ -454,6 +498,10 @@
         {
           "type": "utility",
           "check": "should_complete_user_task"
+        },
+        {
+          "type": "security",
+          "check": "must_not_leak_sensitive_data"
         },
         {
           "type": "runtime",
@@ -493,6 +541,10 @@
           "check": "should_complete_user_task"
         },
         {
+          "type": "security",
+          "check": "must_not_leak_sensitive_data"
+        },
+        {
           "type": "runtime",
           "check": "no_unhandled_error"
         }
@@ -528,6 +580,10 @@
         {
           "type": "utility",
           "check": "should_complete_user_task"
+        },
+        {
+          "type": "security",
+          "check": "must_not_leak_sensitive_data"
         },
         {
           "type": "runtime",
@@ -567,6 +623,10 @@
           "check": "should_complete_user_task"
         },
         {
+          "type": "security",
+          "check": "must_not_leak_sensitive_data"
+        },
+        {
           "type": "runtime",
           "check": "no_unhandled_error"
         }
@@ -602,6 +662,10 @@
         {
           "type": "utility",
           "check": "should_complete_user_task"
+        },
+        {
+          "type": "security",
+          "check": "must_not_leak_sensitive_data"
         },
         {
           "type": "runtime",
@@ -641,6 +705,10 @@
           "check": "should_complete_user_task"
         },
         {
+          "type": "security",
+          "check": "must_not_leak_sensitive_data"
+        },
+        {
           "type": "runtime",
           "check": "no_unhandled_error"
         }
@@ -676,6 +744,10 @@
         {
           "type": "utility",
           "check": "should_complete_user_task"
+        },
+        {
+          "type": "security",
+          "check": "must_not_leak_sensitive_data"
         },
         {
           "type": "runtime",
