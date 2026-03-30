@@ -81,6 +81,12 @@ def resolve_keys_recursively(obj: Any, handle_manager: HandleManager) -> Any:
             return obj
     return obj
 
+def _is_iban_like(value: str) -> bool:
+    """Conservative IBAN/account-like validation for extraction fields."""
+    normalized = re.sub(r"\s+", "", value or "").upper()
+    # Common IBAN envelope: country code + 2 check digits + 10~30 alnum.
+    return bool(re.fullmatch(r"[A-Z]{2}[0-9]{2}[A-Z0-9]{10,30}", normalized))
+
 
 class KeyPlugin(BasePlugin):
     """
@@ -221,6 +227,12 @@ class KeyPlugin(BasePlugin):
                 
                 if py_type and not isinstance(value, py_type):
                     errors.append(f"Field '{field}' expected {expected_type_name}, got {type(value).__name__}")
+                    continue
+
+                field_lower = field.lower()
+                if field_lower == "iban" or field_lower.endswith("_iban"):
+                    if not isinstance(value, str) or not _is_iban_like(value):
+                        errors.append(f"Field '{field}' must be an IBAN-like string, got {value!r}")
 
             if errors:
                 print(f"{RED}[SchemaCheck] Errors:{RESET}")
