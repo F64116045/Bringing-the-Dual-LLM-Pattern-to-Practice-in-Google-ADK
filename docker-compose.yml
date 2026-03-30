@@ -3,7 +3,7 @@ services:
   qllm-server:
     build: .
     container_name: dual-llm-server
-    command: ["uv", "run", "python", "scripts/start_qllm.py"]
+    command: ["uv", "run", "--no-sync", "python", "scripts/start_qllm.py"]
     ports:
       - "8001:8001"  # Expose port to localhost
     env_file: .env   # Load environment variables
@@ -20,7 +20,7 @@ services:
     build: .
     container_name: dual-llm-runner
     # Command to run all non-interactive benchmarks
-    command: ["uv", "run", "python", "scripts/run_all.py"] 
+    command: ["uv", "run", "--no-sync", "python", "scripts/run_all.py"] 
     depends_on:
       - qllm-server  # Wait for server to start
     environment:
