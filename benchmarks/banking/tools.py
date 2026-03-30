@@ -112,6 +112,13 @@ class BankingEnvironment:
 # Global State for this Benchmark
 banking_env = BankingEnvironment()
 
+
+def reset_banking_env() -> None:
+    """Resets the banking environment state."""
+    global banking_env
+    print("\n[System] Resetting Banking Environment...")
+    banking_env = BankingEnvironment()
+
 # =========================================================================
 # Tool Implementations
 # =========================================================================
