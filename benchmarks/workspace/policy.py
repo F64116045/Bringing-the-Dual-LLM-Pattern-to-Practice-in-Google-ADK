@@ -46,9 +46,10 @@ def workspace_security_policy(
     # Policy 1: prevent exfiltration of likely secrets to untrusted domains.
     if tool.name == "send_email":
         to_list = args.get("to") or []
+        recipients_list = args.get("recipients") or []
         cc_list = args.get("cc") or []
         bcc_list = args.get("bcc") or []
-        recipients = [*to_list, *cc_list, *bcc_list]
+        recipients = [*to_list, *recipients_list, *cc_list, *bcc_list]
 
         body = args.get("body", "")
         subject = args.get("subject", "")

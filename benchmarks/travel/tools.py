@@ -188,15 +188,150 @@ def get_all_hotels_in_city(city: str) -> List[Dict]:
     print(f"Tool Exec: get_all_hotels_in_city (City: {city})")
     return [h.model_dump() for h in travel_env.hotels if h.city.lower() == city.lower()]
 
+def get_hotels_prices(hotel_names: List[str]) -> Dict[str, Dict[str, float]]:
+    print(f"Tool Exec: get_hotels_prices (Hotels: {hotel_names})")
+    wanted = {n.lower() for n in hotel_names}
+    return {
+        h.name: {"price_min": h.price_min, "price_max": h.price_max}
+        for h in travel_env.hotels
+        if h.name.lower() in wanted
+    }
+
+def get_hotels_address(hotel_name: str) -> Dict[str, str]:
+    print(f"Tool Exec: get_hotels_address (Hotel: {hotel_name})")
+    for h in travel_env.hotels:
+        if h.name.lower() == hotel_name.lower():
+            return {"hotel_name": h.name, "address": h.address}
+    return {"error": "Hotel not found"}
+
+def get_rating_reviews_for_hotels(hotel_names: List[str]) -> Dict[str, Dict[str, Any]]:
+    print(f"Tool Exec: get_rating_reviews_for_hotels (Hotels: {hotel_names})")
+    wanted = {n.lower() for n in hotel_names}
+    return {
+        h.name: {"rating": h.rating, "reviews": h.reviews}
+        for h in travel_env.hotels
+        if h.name.lower() in wanted
+    }
+
 # --- Restaurant Tools ---
 def get_all_restaurants_in_city(city: str) -> List[Dict]:
     print(f"Tool Exec: get_all_restaurants_in_city (City: {city})")
     return [r.model_dump() for r in travel_env.restaurants if r.city.lower() == city.lower()]
 
+def get_restaurants_address(restaurant_names: List[str]) -> Dict[str, str]:
+    print(f"Tool Exec: get_restaurants_address (Restaurants: {restaurant_names})")
+    wanted = {n.lower() for n in restaurant_names}
+    return {
+        r.name: r.address
+        for r in travel_env.restaurants
+        if r.name.lower() in wanted
+    }
+
+def get_rating_reviews_for_restaurants(restaurant_names: List[str]) -> Dict[str, Dict[str, Any]]:
+    print(f"Tool Exec: get_rating_reviews_for_restaurants (Restaurants: {restaurant_names})")
+    wanted = {n.lower() for n in restaurant_names}
+    return {
+        r.name: {"rating": r.rating, "reviews": r.reviews}
+        for r in travel_env.restaurants
+        if r.name.lower() in wanted
+    }
+
+def get_cuisine_type_for_restaurants(restaurant_names: List[str]) -> Dict[str, str]:
+    print(f"Tool Exec: get_cuisine_type_for_restaurants (Restaurants: {restaurant_names})")
+    wanted = {n.lower() for n in restaurant_names}
+    return {
+        r.name: r.cuisine_type
+        for r in travel_env.restaurants
+        if r.name.lower() in wanted
+    }
+
+def get_dietary_restrictions_for_all_restaurants(restaurant_names: List[str]) -> Dict[str, str]:
+    print(
+        f"Tool Exec: get_dietary_restrictions_for_all_restaurants (Restaurants: {restaurant_names})"
+    )
+    wanted = {n.lower() for n in restaurant_names}
+    return {
+        r.name: r.dietary_restrictions
+        for r in travel_env.restaurants
+        if r.name.lower() in wanted
+    }
+
+def get_contact_information_for_restaurants(restaurant_names: List[str]) -> Dict[str, str]:
+    print(f"Tool Exec: get_contact_information_for_restaurants (Restaurants: {restaurant_names})")
+    wanted = {n.lower() for n in restaurant_names}
+    return {
+        r.name: r.contact_information
+        for r in travel_env.restaurants
+        if r.name.lower() in wanted
+    }
+
+def get_price_for_restaurants(restaurant_names: List[str]) -> Dict[str, float]:
+    print(f"Tool Exec: get_price_for_restaurants (Restaurants: {restaurant_names})")
+    wanted = {n.lower() for n in restaurant_names}
+    return {
+        r.name: r.price_per_person
+        for r in travel_env.restaurants
+        if r.name.lower() in wanted
+    }
+
+def check_restaurant_opening_hours(restaurant_name: str, opening_hours: str) -> Dict[str, bool]:
+    print(
+        f"Tool Exec: check_restaurant_opening_hours (Restaurant: {restaurant_name}, Time: {opening_hours})"
+    )
+    for r in travel_env.restaurants:
+        if r.name.lower() == restaurant_name.lower():
+            return {"restaurant_name": r.name, "is_open": opening_hours in r.operating_hours}
+    return {"restaurant_name": restaurant_name, "is_open": False}
+
 # --- Car Rental Tools ---
 def get_all_car_rental_companies_in_city(city: str) -> List[Dict]:
     print(f"Tool Exec: get_all_car_rental_companies_in_city (City: {city})")
     return [c.model_dump() for c in travel_env.car_rentals if c.city.lower() == city.lower()]
+
+def get_car_types_available(company_names: List[str]) -> Dict[str, List[str]]:
+    print(f"Tool Exec: get_car_types_available (Companies: {company_names})")
+    wanted = {n.lower() for n in company_names}
+    return {
+        c.name: c.car_types_available
+        for c in travel_env.car_rentals
+        if c.name.lower() in wanted
+    }
+
+def get_rating_reviews_for_car_rental(company_names: List[str]) -> Dict[str, Dict[str, Any]]:
+    print(f"Tool Exec: get_rating_reviews_for_car_rental (Companies: {company_names})")
+    wanted = {n.lower() for n in company_names}
+    return {
+        c.name: {"rating": c.rating, "reviews": c.reviews}
+        for c in travel_env.car_rentals
+        if c.name.lower() in wanted
+    }
+
+def get_car_rental_address(company_names: List[str]) -> Dict[str, str]:
+    print(f"Tool Exec: get_car_rental_address (Companies: {company_names})")
+    wanted = {n.lower() for n in company_names}
+    return {
+        c.name: c.address
+        for c in travel_env.car_rentals
+        if c.name.lower() in wanted
+    }
+
+def get_car_fuel_options(company_names: List[str]) -> Dict[str, List[str]]:
+    print(f"Tool Exec: get_car_fuel_options (Companies: {company_names})")
+    wanted = {n.lower() for n in company_names}
+    return {
+        c.name: c.fuel_options
+        for c in travel_env.car_rentals
+        if c.name.lower() in wanted
+    }
+
+def get_car_price_per_day(company_names: List[str]) -> Dict[str, float]:
+    print(f"Tool Exec: get_car_price_per_day (Companies: {company_names})")
+    wanted = {n.lower() for n in company_names}
+    return {
+        c.name: c.price_per_day
+        for c in travel_env.car_rentals
+        if c.name.lower() in wanted
+    }
 
 # --- Flight Tools ---
 def get_flight_information(departure_city: str, arrival_city: str) -> List[Dict]:
@@ -286,6 +421,45 @@ def add_calendar_event(title: str, description: str, start_time: str, end_time: 
     travel_env.calendar_events.append(new_event)
     return {"status": "success", "message": f"Event '{title}' has been added to the calendar."}
 
+def create_calendar_event(
+    title: str,
+    start_time: str,
+    end_time: str,
+    description: str = "",
+    location: str = "",
+    participants: Optional[List[str]] = None,
+) -> Dict[str, str]:
+    return add_calendar_event(
+        title=title,
+        description=description,
+        start_time=start_time,
+        end_time=end_time,
+        location=location,
+        participants=participants or [],
+    )
+
+def get_day_calendar_events(day: str) -> List[Dict]:
+    print(f"Tool Exec: get_day_calendar_events (Day: {day})")
+    day_obj = datetime.date.fromisoformat(day)
+    return [e.model_dump() for e in travel_env.calendar_events if e.start_time.date() == day_obj]
+
+def search_calendar_events(query: str) -> List[Dict]:
+    print(f"Tool Exec: search_calendar_events (Query: {query})")
+    q = query.lower()
+    return [
+        e.model_dump()
+        for e in travel_env.calendar_events
+        if q in e.title.lower() or q in e.description.lower() or q in e.location.lower()
+    ]
+
+def cancel_calendar_event(event_id: str) -> Dict[str, str]:
+    print(f"Tool Exec: cancel_calendar_event (Event ID: {event_id})")
+    for idx, event in enumerate(travel_env.calendar_events):
+        if event.id_ == event_id:
+            del travel_env.calendar_events[idx]
+            return {"status": "success", "message": f"Event {event_id} cancelled."}
+    return {"error": f"Event {event_id} not found"}
+
 # --- Reservation Inquiry Tool ---
 def get_current_reservation() -> Dict[str, Any]:
     print("Tool Exec: get_current_reservation")
@@ -300,8 +474,23 @@ def get_travel_tools():
     return [
         FunctionTool(func=get_user_information),
         FunctionTool(func=get_all_hotels_in_city),
+        FunctionTool(func=get_hotels_prices),
+        FunctionTool(func=get_hotels_address),
+        FunctionTool(func=get_rating_reviews_for_hotels),
         FunctionTool(func=get_all_restaurants_in_city),
+        FunctionTool(func=get_restaurants_address),
+        FunctionTool(func=get_rating_reviews_for_restaurants),
+        FunctionTool(func=get_cuisine_type_for_restaurants),
+        FunctionTool(func=get_dietary_restrictions_for_all_restaurants),
+        FunctionTool(func=get_contact_information_for_restaurants),
+        FunctionTool(func=get_price_for_restaurants),
+        FunctionTool(func=check_restaurant_opening_hours),
         FunctionTool(func=get_all_car_rental_companies_in_city),
+        FunctionTool(func=get_car_types_available),
+        FunctionTool(func=get_rating_reviews_for_car_rental),
+        FunctionTool(func=get_car_rental_address),
+        FunctionTool(func=get_car_fuel_options),
+        FunctionTool(func=get_car_price_per_day),
         FunctionTool(func=get_flight_information),
         FunctionTool(func=reserve_hotel),
         FunctionTool(func=reserve_restaurant),
@@ -310,6 +499,10 @@ def get_travel_tools():
         FunctionTool(func=search_emails),
         FunctionTool(func=send_email),
         FunctionTool(func=get_calendar_events),
+        FunctionTool(func=get_day_calendar_events),
+        FunctionTool(func=search_calendar_events),
+        FunctionTool(func=cancel_calendar_event),
         FunctionTool(func=add_calendar_event),
+        FunctionTool(func=create_calendar_event),
         FunctionTool(func=get_current_reservation),
     ]

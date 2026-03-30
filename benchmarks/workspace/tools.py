@@ -90,6 +90,10 @@ def reset_workspace_env():
 # =========================================================================
 
 # --- Calendar Tools ---
+def get_current_day() -> str:
+    print("Tool Exec: get_current_day")
+    return prod_env.current_day.isoformat()
+
 def get_calendar_events(date: str) -> List[Dict]:
     print(f"Tool Exec: get_calendar_events (Date: {date})")
     target_date = datetime.date.fromisoformat(date)
@@ -110,10 +114,110 @@ def create_calendar_event(title: str, start_time: str, end_time: str, descriptio
     prod_env.calendar_events.append(event)
     return {"status": "success", "event_id": new_id, "title": title}
 
+def get_day_calendar_events(day: str) -> List[Dict]:
+    return get_calendar_events(day)
+
+def search_calendar_events(query: str) -> List[Dict]:
+    print(f"Tool Exec: search_calendar_events (Query: {query})")
+    q = query.lower()
+    return [
+        e.model_dump(mode="json")
+        for e in prod_env.calendar_events
+        if q in e.title.lower() or q in (e.description or "").lower() or q in (e.location or "").lower()
+    ]
+
+def cancel_calendar_event(event_id: str) -> Dict[str, str]:
+    print(f"Tool Exec: cancel_calendar_event (Event ID: {event_id})")
+    for idx, e in enumerate(prod_env.calendar_events):
+        if e.id_ == event_id:
+            del prod_env.calendar_events[idx]
+            return {"status": "success", "event_id": event_id}
+    return {"error": "Event not found"}
+
+def reschedule_calendar_event(event_id: str, start_time: str, end_time: str) -> Dict[str, str]:
+    print(f"Tool Exec: reschedule_calendar_event (Event ID: {event_id})")
+    for e in prod_env.calendar_events:
+        if e.id_ == event_id:
+            e.start_time = datetime.datetime.fromisoformat(start_time)
+            e.end_time = datetime.datetime.fromisoformat(end_time)
+            return {"status": "success", "event_id": event_id}
+    return {"error": "Event not found"}
+
+def add_calendar_event_participants(event_id: str, participants: List[str]) -> Dict[str, str]:
+    print(f"Tool Exec: add_calendar_event_participants (Event ID: {event_id})")
+    for e in prod_env.calendar_events:
+        if e.id_ == event_id:
+            merged = list(dict.fromkeys([*e.participants, *participants]))
+            e.participants = merged
+            return {"status": "success", "event_id": event_id}
+    return {"error": "Event not found"}
+
 # --- Drive Tools ---
 def list_files() -> List[Dict]:
     print("Tool Exec: list_files")
     return [{"id": f.id_, "filename": f.filename, "owner": f.owner} for f in prod_env.drive_files]
+
+def search_files_by_filename(query: str) -> List[Dict]:
+    print(f"Tool Exec: search_files_by_filename (Query: {query})")
+    q = query.lower()
+    return [f.model_dump(mode="json") for f in prod_env.drive_files if q in f.filename.lower()]
+
+def search_files(query: str) -> List[Dict]:
+    print(f"Tool Exec: search_files (Query: {query})")
+    q = query.lower()
+    return [
+        f.model_dump(mode="json")
+        for f in prod_env.drive_files
+        if q in f.filename.lower() or q in f.content.lower()
+    ]
+
+def create_file(filename: str, content: str, file_type: str = "document") -> Dict:
+    print(f"Tool Exec: create_file (File: {filename})")
+    new_id = str(max([int(f.id_) for f in prod_env.drive_files if f.id_.isdigit()], default=0) + 1)
+    prod_env.drive_files.append(
+        GDriveFile(
+            id_=new_id,
+            filename=filename,
+            file_type=file_type,
+            content=content,
+            owner=prod_env.account_email,
+            shared_with={},
+            last_modified=datetime.datetime.now(),
+        )
+    )
+    return {"status": "success", "id": new_id, "filename": filename}
+
+def delete_file(file_id: str) -> Dict[str, str]:
+    print(f"Tool Exec: delete_file (ID: {file_id})")
+    for idx, f in enumerate(prod_env.drive_files):
+        if f.id_ == file_id:
+            del prod_env.drive_files[idx]
+            return {"status": "success", "file_id": file_id}
+    return {"error": "File not found"}
+
+def get_file_by_id(file_id: str) -> Dict:
+    print(f"Tool Exec: get_file_by_id (ID: {file_id})")
+    for f in prod_env.drive_files:
+        if f.id_ == file_id:
+            return f.model_dump(mode="json")
+    return {"error": "File not found"}
+
+def share_file(file_id: str, recipient: str, permission: str = "r") -> Dict[str, str]:
+    print(f"Tool Exec: share_file (ID: {file_id}, Recipient: {recipient}, Permission: {permission})")
+    for f in prod_env.drive_files:
+        if f.id_ == file_id:
+            f.shared_with[recipient] = permission
+            return {"status": "success", "file_id": file_id}
+    return {"error": "File not found"}
+
+def append_to_file(file_id: str, content: str) -> Dict[str, str]:
+    print(f"Tool Exec: append_to_file (ID: {file_id})")
+    for f in prod_env.drive_files:
+        if f.id_ == file_id:
+            f.content += content
+            f.last_modified = datetime.datetime.now()
+            return {"status": "success", "file_id": file_id}
+    return {"error": "File not found"}
 
 def read_file(filename: str) -> Dict:
     print(f"Tool Exec: read_file (File: {filename})")
@@ -144,28 +248,100 @@ def search_emails(query: str, max_results: int = 10) -> List[Dict]:
             results.append(email.model_dump(mode='json'))
     return results
 
-def send_email(to: List[str], subject: str, body: str, cc: Optional[List[str]] = None, bcc: Optional[List[str]] = None) -> Dict:
-    print(f"Tool Exec: send_email (To: {to}, Subject: {subject})")
+def send_email(
+    to: Optional[List[str]] = None,
+    subject: str = "",
+    body: str = "",
+    cc: Optional[List[str]] = None,
+    bcc: Optional[List[str]] = None,
+    recipients: Optional[List[str]] = None,
+) -> Dict:
+    actual_recipients = recipients if recipients is not None else (to or [])
+    print(f"Tool Exec: send_email (To: {actual_recipients}, Subject: {subject})")
     max_id = max([int(e.id_) for e in prod_env.emails if e.id_.isdigit()], default=0)
     new_id = str(max_id + 1)
     
     email = Email(
-        id_=new_id, sender=prod_env.account_email, recipients=to, subject=subject,
+        id_=new_id, sender=prod_env.account_email, recipients=actual_recipients, subject=subject,
         body=body, cc=cc or [], bcc=bcc or [], status='sent', read=True, timestamp=datetime.datetime.now()
     )
     prod_env.emails.append(email)
     return {"status": "success", "email_id": new_id}
+
+def delete_email(email_id: str) -> Dict[str, str]:
+    print(f"Tool Exec: delete_email (ID: {email_id})")
+    for idx, e in enumerate(prod_env.emails):
+        if e.id_ == email_id:
+            del prod_env.emails[idx]
+            return {"status": "success", "email_id": email_id}
+    return {"error": "Email not found"}
+
+def get_unread_emails() -> List[Dict]:
+    print("Tool Exec: get_unread_emails")
+    return [e.model_dump(mode="json") for e in prod_env.emails if not e.read and e.status == "received"]
+
+def get_sent_emails() -> List[Dict]:
+    print("Tool Exec: get_sent_emails")
+    return [e.model_dump(mode="json") for e in prod_env.emails if e.status == "sent"]
+
+def get_received_emails() -> List[Dict]:
+    print("Tool Exec: get_received_emails")
+    return [e.model_dump(mode="json") for e in prod_env.emails if e.status == "received"]
+
+def get_draft_emails() -> List[Dict]:
+    print("Tool Exec: get_draft_emails")
+    return [e.model_dump(mode="json") for e in prod_env.emails if e.status == "draft"]
+
+def search_contacts_by_name(query: str) -> List[Dict]:
+    print(f"Tool Exec: search_contacts_by_name (Query: {query})")
+    q = query.lower()
+    contacts = {}
+    for e in prod_env.emails:
+        contacts[e.sender] = {"name": e.sender.split("@")[0], "email": e.sender}
+        for r in e.recipients:
+            contacts[r] = {"name": r.split("@")[0], "email": r}
+    return [c for c in contacts.values() if q in c["name"].lower()]
+
+def search_contacts_by_email(query: str) -> List[Dict]:
+    print(f"Tool Exec: search_contacts_by_email (Query: {query})")
+    q = query.lower()
+    contacts = {}
+    for e in prod_env.emails:
+        contacts[e.sender] = {"name": e.sender.split("@")[0], "email": e.sender}
+        for r in e.recipients:
+            contacts[r] = {"name": r.split("@")[0], "email": r}
+    return [c for c in contacts.values() if q in c["email"].lower()]
 
 # =========================================================================
 # Export
 # =========================================================================
 def get_workspace_tools():
     return [
+        FunctionTool(func=get_current_day),
+        FunctionTool(func=get_day_calendar_events),
+        FunctionTool(func=search_calendar_events),
         FunctionTool(func=get_calendar_events),
         FunctionTool(func=create_calendar_event),
+        FunctionTool(func=cancel_calendar_event),
+        FunctionTool(func=reschedule_calendar_event),
+        FunctionTool(func=add_calendar_event_participants),
         FunctionTool(func=list_files),
+        FunctionTool(func=search_files_by_filename),
+        FunctionTool(func=search_files),
+        FunctionTool(func=create_file),
+        FunctionTool(func=delete_file),
+        FunctionTool(func=get_file_by_id),
+        FunctionTool(func=share_file),
+        FunctionTool(func=append_to_file),
         FunctionTool(func=read_file),
         FunctionTool(func=update_file),
+        FunctionTool(func=delete_email),
+        FunctionTool(func=get_unread_emails),
+        FunctionTool(func=get_sent_emails),
+        FunctionTool(func=get_received_emails),
+        FunctionTool(func=get_draft_emails),
+        FunctionTool(func=search_contacts_by_name),
+        FunctionTool(func=search_contacts_by_email),
         FunctionTool(func=search_emails),
         FunctionTool(func=send_email),
     ]
