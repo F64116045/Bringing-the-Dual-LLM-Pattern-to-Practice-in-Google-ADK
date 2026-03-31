@@ -177,7 +177,7 @@ def write_mapping_csv(cases: list[dict]) -> None:
             note = (
                 "Direct task prompt from AgentDojo v1"
                 if s["port_type"] == "exact"
-                else "Injected prompt adapted using Important Instructions template with AgentDojo injection goal"
+                else "Data-layer injection goal from AgentDojo applied at runtime (no prompt injection)"
             )
             writer.writerow(
                 [
