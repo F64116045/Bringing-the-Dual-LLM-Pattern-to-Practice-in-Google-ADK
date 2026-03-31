@@ -19,8 +19,8 @@ services:
   benchmark-runner:
     build: .
     container_name: dual-llm-runner
-    # Command to run all non-interactive benchmarks
-    command: ["uv", "run", "--no-sync", "python", "scripts/run_all.py"] 
+    # Keep runner container idle; invoke benchmarks explicitly via `docker compose run`.
+    command: ["sleep", "infinity"]
     depends_on:
       - qllm-server  # Wait for server to start
     environment:

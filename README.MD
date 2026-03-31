@@ -102,42 +102,39 @@ Due to the architectural differences between Google ADK and the native AgentDojo
 > This repository focuses on validating the Dual LLM architecture against representative injection scenarios. For the complete, original benchmark suite and the ability to run all 600+ test cases, please refer to the official [AgentDojo Repository](https://github.com/ethz-spylab/agentdojo).
 > 
 
-We provide scripts to replicate the evaluation results presented in **Table 1** of the paper. The experiments compare the Dual LLM architecture against the AgentDojo benchmark cases.
+We provide a reproducible benchmark workflow built around case packs.
 
-To run the full evaluation suite using Docker Compose:
+### Recommended End-to-End Run
 
 ```bash
-docker compose up --build
+make exp-v1 MODEL=openai/gpt-4o-mini
 ```
 
-This command will:
+This command:
 
-1. Start the isolated **Q-LLM Server** (Quarantined Environment).
-2. Launch the **Benchmark Runner** container.
-3. Execute the 27 security test cases across the four environments.
+1. Starts the isolated **Q-LLM Server**.
+2. Runs **baseline** and **dual** modes over the curated case pack.
+3. Writes JSONL results, per-case traces, and a summary under `results/runs/<run-id>/`.
 
-### Running Individual Environments
-
-To evaluate specific environments individually, use the following commands:
-
-- **E-Banking (interactive):** `docker compose run --rm benchmark-runner uv run python scripts/run_benchmark.py`
-- **Slack Environment:** `docker compose run --rm benchmark-runner uv run python scripts/run_slack.py`
-- **Travel Environment:** `docker compose run --rm benchmark-runner uv run python scripts/run_travel.py`
-- **Workspace Environment:** `docker compose run --rm benchmark-runner uv run python scripts/run_workspace.py`
-
-### Interactive Chat with P-LLM (No Full Benchmark)
-
-If you only want to chat with the Privileged LLM (P-LLM), start only the Q-LLM server, then run the interactive script:
+### Manual Batch Run
 
 ```bash
-docker compose up -d --build qllm-server
-docker compose exec qllm-server uv run python scripts/run_benchmark.py
+docker compose up -d qllm-server
+docker compose run --rm -v $(pwd)/results:/app/results benchmark-runner \
+  uv run --no-sync python scripts/run_case_suite.py \
+  --mode dual \
+  --model openai/gpt-4o-mini \
+  --cases benchmarks/case_pack_v1_50.json \
+  --env all \
+  --output results/case_pack_v1_50_dual.jsonl \
+  --trace-dir results/traces
 ```
 
-Optional: force a specific model from command line:
+### Regenerate Cases
 
 ```bash
-docker compose exec qllm-server uv run python scripts/run_benchmark.py --model openai/gpt-4o-mini
+make cases-sync
+make cases-pack
 ```
 
 ## References & Acknowledgements
