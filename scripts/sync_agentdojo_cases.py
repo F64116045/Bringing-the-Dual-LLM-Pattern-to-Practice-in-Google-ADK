@@ -6,7 +6,7 @@ from typing import Any
 
 ROOT = Path(__file__).resolve().parents[1]
 AGENTDOJO_V1 = ROOT / "external" / "agentdojo" / "src" / "agentdojo" / "default_suites" / "v1"
-OUTPUT = ROOT / "benchmarks" / "case_registry.json"
+OUTPUT = ROOT / "benchmarks" / "generated" / "case_registry.json"
 
 ENVS = ["banking", "slack", "travel", "workspace"]
 
@@ -163,6 +163,7 @@ def main() -> None:
             f"AgentDojo v1 suite path not found: {AGENTDOJO_V1}. Clone external/agentdojo first."
         )
 
+    OUTPUT.parent.mkdir(parents=True, exist_ok=True)
     cases = build_cases()
     payload = {
         "version": "agentdojo-v1-data-injection-port",

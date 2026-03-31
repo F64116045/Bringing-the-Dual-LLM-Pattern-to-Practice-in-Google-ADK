@@ -2,7 +2,7 @@
 set -euo pipefail
 
 MODEL="openai/gpt-4o-mini"
-CASES="benchmarks/case_pack_v1_50.json"
+CASES="benchmarks/generated/case_pack_v1_50.json"
 ENV_NAME="all"
 LIMIT=""
 RUN_ID="$(date -u +%Y%m%dT%H%M%SZ)"

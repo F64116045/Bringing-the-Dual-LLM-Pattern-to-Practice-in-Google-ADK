@@ -29,7 +29,7 @@ docker compose run --rm -v $(pwd)/results:/app/results benchmark-runner \
   uv run --no-sync python scripts/run_case_suite.py \
   --mode dual \
   --model openai/gpt-4o-mini \
-  --cases benchmarks/case_pack_v1_50.json \
+  --cases benchmarks/generated/case_pack_v1_50.json \
   --env banking --limit 1 \
   --output results/manual-single-dual.jsonl \
   --trace-dir results/traces

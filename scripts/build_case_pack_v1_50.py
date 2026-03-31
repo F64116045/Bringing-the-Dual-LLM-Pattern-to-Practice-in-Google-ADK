@@ -5,9 +5,9 @@ from pathlib import Path
 
 
 ROOT = Path(__file__).resolve().parents[1]
-SRC_PATH = ROOT / "benchmarks" / "case_registry.json"
-OUT_JSON = ROOT / "benchmarks" / "case_pack_v1_50.json"
-OUT_CSV = ROOT / "benchmarks" / "mapping_v1_50.csv"
+SRC_PATH = ROOT / "benchmarks" / "generated" / "case_registry.json"
+OUT_JSON = ROOT / "benchmarks" / "generated" / "case_pack_v1_50.json"
+OUT_CSV = ROOT / "benchmarks" / "generated" / "mapping_v1_50.csv"
 
 # Balanced cross-environment target counts.
 QUOTA = {

@@ -1,7 +1,7 @@
 SHELL := /bin/bash
 
 MODEL ?= openai/gpt-4o-mini
-CASES ?= benchmarks/case_pack_v1_50.json
+CASES ?= benchmarks/generated/case_pack_v1_50.json
 ENV ?= all
 LIMIT ?=
 

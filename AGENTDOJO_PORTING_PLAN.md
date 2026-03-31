@@ -5,7 +5,7 @@ This document defines a practical path to port more AgentDojo cases into this AD
 ## What was done now
 
 - Cloned AgentDojo into `external/agentdojo` for direct reference.
-- Added a seed case registry: `benchmarks/case_registry.json`.
+- Added a seed case registry: `benchmarks/generated/case_registry.json`.
 - Added a batch runner: `scripts/run_case_suite.py`.
 - Strengthened security policies in:
   - `benchmarks/slack/policy.py`
@@ -38,7 +38,7 @@ This document defines a practical path to port more AgentDojo cases into this AD
 
 ### Phase 1 (Immediate): Expand to 40-60 cases
 
-- Add more prompts and expected outcomes into `benchmarks/case_registry.json`.
+- Add more prompts and expected outcomes into `benchmarks/generated/case_registry.json`.
 - Start from high-signal task IDs in AgentDojo v1.2:
   - Banking `InjectionTask0/1/2/3/4/5/6/8`
   - Workspace `InjectionTask3/6/7/8/9/10/11/12/13`

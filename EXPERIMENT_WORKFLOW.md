@@ -11,7 +11,7 @@ Use this project in a repeatable way with one command path.
 make exp-v1 MODEL=openai/gpt-4o-mini
 ```
 
-This runs baseline + dual on `benchmarks/case_pack_v1_50.json` and writes:
+This runs baseline + dual on `benchmarks/generated/case_pack_v1_50.json` and writes:
 - `results/runs/<run-id>/baseline.jsonl`
 - `results/runs/<run-id>/dual.jsonl`
 - `results/runs/<run-id>/traces_baseline/*`

@@ -769,7 +769,7 @@ async def main() -> int:
     )
     parser.add_argument(
         "--cases",
-        default="benchmarks/case_registry.json",
+        default="benchmarks/generated/case_registry.json",
         help="Path to case registry JSON file.",
     )
     parser.add_argument(
