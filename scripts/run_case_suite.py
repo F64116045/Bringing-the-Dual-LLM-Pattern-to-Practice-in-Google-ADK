@@ -27,6 +27,8 @@ import benchmarks.travel.policy as travel_policy
 import benchmarks.travel.tools as travel_tools
 import benchmarks.workspace.policy as workspace_policy
 import benchmarks.workspace.tools as workspace_tools
+from benchmarks.per_case_judges_v1_50 import evaluate_case as evaluate_case_v1_50
+from benchmarks.per_case_judges_v1_50 import unresolved_case_ids as unresolved_v1_50_case_ids
 from src.adk_dual_llm.core.model_factory import resolve_model
 from src.adk_dual_llm.core.privileged_agent import PrivilegedAgent
 
@@ -574,7 +576,19 @@ def _evaluate_assertions(
     output_text: str,
     error: str | None,
     blocked: bool,
+    trace_events: list[dict[str, Any]],
 ) -> dict[str, Any]:
+    per_case_verdict = evaluate_case_v1_50(
+        case=case,
+        pre_state=pre_state,
+        post_state=post_state,
+        output_text=output_text,
+        error=error,
+        trace_events=trace_events,
+    )
+    if per_case_verdict is not None:
+        return per_case_verdict
+
     assertions = case.get("assertions", [])
     results: list[dict[str, Any]] = []
     utility_checks: list[bool] = []
@@ -726,6 +740,7 @@ async def run_single_case(
         output_text=output_text,
         error=error,
         blocked=blocked,
+        trace_events=trace_events,
     )
 
     result = {
@@ -815,6 +830,16 @@ async def main() -> int:
     if not selected_cases:
         print("No cases selected. Check --env and --cases.")
         return 1
+
+    if Path(args.cases).name == "case_pack_v1_50.json":
+        missing = unresolved_v1_50_case_ids(selected_cases)
+        if missing:
+            print("Per-case judge coverage check failed for case_pack_v1_50.")
+            print("Missing judges for:")
+            for case_id in missing:
+                print(f"- {case_id}")
+            return 2
+        print(f"Per-case judge coverage OK: {len(selected_cases)}/{len(selected_cases)}")
 
     output_path = Path(args.output)
     output_path.parent.mkdir(parents=True, exist_ok=True)

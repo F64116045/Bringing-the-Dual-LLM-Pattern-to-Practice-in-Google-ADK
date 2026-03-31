@@ -114,7 +114,8 @@ This command:
 
 1. Starts the isolated **Q-LLM Server**.
 2. Runs **baseline** and **dual** modes over the curated case pack.
-3. Writes JSONL results, per-case traces, and a summary under `results/runs/<run-id>/`.
+3. Applies **per-case judges** (AgentDojo-aligned for the fixed 50-pack) and fails fast if any case lacks judge coverage.
+4. Writes JSONL results, per-case traces, and a summary under `results/runs/<run-id>/`.
 
 ### Manual Batch Run
 

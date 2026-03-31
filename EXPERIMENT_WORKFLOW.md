@@ -18,6 +18,9 @@ This runs baseline + dual on `benchmarks/generated/case_pack_v1_50.json` and wri
 - `results/runs/<run-id>/traces_dual/*`
 - `results/runs/<run-id>/summary.json`
 
+`case_pack_v1_50.json` is guarded by per-case judges.
+If any selected case in this pack does not have an assigned per-case judge, the run exits early with a coverage error.
+
 ## Useful Commands
 - Re-sync from AgentDojo tasks:
 ```bash

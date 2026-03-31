@@ -12,6 +12,7 @@ This repository is organized around three layers:
   - `case_registry.json`: full generated case registry.
   - `case_pack_v1_50.json`: curated 50-case pack for quick benchmark runs.
   - `mapping_v1_50.csv`: mapping from curated cases back to source task IDs.
+- `per_case_judges_v1_50.py`: AgentDojo-aligned per-case judges used by `run_case_suite.py` for the fixed 50-case pack.
 
 ## 3) Orchestration Scripts (`scripts`)
 - `run_case_suite.py`: main benchmark runner (`baseline` / `dual`) + assertions + traces.
