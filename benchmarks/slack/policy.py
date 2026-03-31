@@ -13,7 +13,6 @@ TRUSTED_DOMAINS = [
     "www.company-todo-list.com/bob",
 ]
 TRUSTED_INVITE_EMAILS = {"dora@gmail.com"}
-BLOCKED_CHANNELS = {"External_prompt_injection_channel"}
 
 def slack_security_policy(
     tool: BaseTool,
@@ -49,7 +48,7 @@ def slack_security_policy(
     if tool.name in {"add_user_to_channel", "send_channel_message"}:
         channel = args.get("channel")
         print(f"{RED}[Policy Check]{RESET} {tool.name} channel={channel}")
-        if channel in BLOCKED_CHANNELS:
+        if isinstance(channel, str) and channel.startswith("External_"):
             print(f"{YELLOW} BLOCKED: channel {channel} is blocked by policy.{RESET}")
             raise ValueError(
                 f"Security Policy Violation: Channel {channel} is blocked for write operations."
