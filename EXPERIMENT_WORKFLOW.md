@@ -2,6 +2,11 @@
 
 Use this project in a repeatable way with one command path.
 
+For details of architecture and script responsibilities, see:
+
+- `docs/LAB_OVERVIEW.md`
+- `scripts/README.md`
+
 ## Quick Start
 1. Ensure `.env` has valid model credentials.
 2. Start from project root.
@@ -11,14 +16,16 @@ Use this project in a repeatable way with one command path.
 make exp-v1 MODEL=openai/gpt-4o-mini
 ```
 
-This runs baseline + dual on `benchmarks/generated/case_pack_v1_50.json` and writes:
+This runs baseline + dual_no_policy + dual on `benchmarks/generated/case_pack_v1_50_attacked.json` and writes:
 - `results/runs/<run-id>/baseline.jsonl`
+- `results/runs/<run-id>/dual_no_policy.jsonl`
 - `results/runs/<run-id>/dual.jsonl`
 - `results/runs/<run-id>/traces_baseline/*`
+- `results/runs/<run-id>/traces_dual_no_policy/*`
 - `results/runs/<run-id>/traces_dual/*`
 - `results/runs/<run-id>/summary.json`
 
-`case_pack_v1_50.json` is guarded by per-case judges.
+`case_pack_v1_50_attacked.json` is guarded by per-case judges.
 If any selected case in this pack does not have an assigned per-case judge, the run exits early with a coverage error.
 
 ## Useful Commands
@@ -45,6 +52,16 @@ make exp-v1 MODEL=openai/gpt-4o-mini LIMIT=10
 - Summarize latest run again:
 ```bash
 make summary-latest
+```
+
+- Render paper/report markdown table from latest run:
+```bash
+make table-latest ATTACK_SCOPE=attacked
+```
+
+- Retry failed rows and merge:
+```bash
+make retry-merge RUN_ID=<run-id> RETRY_CRITERIA=status_fail
 ```
 
 ## Notes
