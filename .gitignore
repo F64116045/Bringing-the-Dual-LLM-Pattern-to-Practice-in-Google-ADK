@@ -1,8 +1,10 @@
 .env
+.codex
 
 # Python cache/artifacts
 __pycache__/
 *.py[cod]
+.pytest_cache/
 
 # Virtual envs
 .venv/
@@ -13,3 +15,10 @@ results/
 
 # Local external references (not part of source tree)
 external/
+
+# OS / editor noise
+.DS_Store
+*.log
+
+# Generated retry subsets from local reruns
+benchmarks/generated/retry_*.json
