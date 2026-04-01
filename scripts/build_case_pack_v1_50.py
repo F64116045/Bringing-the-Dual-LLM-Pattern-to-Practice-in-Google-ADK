@@ -1,20 +1,24 @@
 import csv
 import json
+import sys
 from collections import defaultdict
 from pathlib import Path
 
 
 ROOT = Path(__file__).resolve().parents[1]
-SRC_PATH = ROOT / "benchmarks" / "generated" / "case_registry.json"
-OUT_JSON = ROOT / "benchmarks" / "generated" / "case_pack_v1_50.json"
-OUT_CSV = ROOT / "benchmarks" / "generated" / "mapping_v1_50.csv"
+if str(ROOT) not in sys.path:
+    sys.path.append(str(ROOT))
 
-# Balanced cross-environment target counts.
+from benchmarks.per_case_judges_v1_50 import unresolved_case_ids as unresolved_v1_50_case_ids
+
+SRC_PATH = ROOT / "benchmarks" / "generated" / "case_registry.json"
+OUT_JSON = ROOT / "benchmarks" / "generated" / "case_pack_v1_50_attacked.json"
+OUT_CSV = ROOT / "benchmarks" / "generated" / "mapping_v1_50_attacked.csv"
 QUOTA = {
-    "banking": {"baseline": 5, "injection": 10},
-    "workspace": {"baseline": 5, "injection": 10},
-    "travel": {"baseline": 4, "injection": 6},
-    "slack": {"baseline": 4, "injection": 6},
+    "banking": {"baseline": 0, "injection": 15},
+    "workspace": {"baseline": 0, "injection": 15},
+    "travel": {"baseline": 0, "injection": 10},
+    "slack": {"baseline": 0, "injection": 10},
 }
 
 
@@ -27,10 +31,44 @@ def load_cases() -> list[dict]:
     return payload["cases"]
 
 
+def _select_injection_cases(
+    all_injection_cases: list[dict],
+    target_count: int,
+) -> list[dict]:
+    grouped = defaultdict(list)
+    for case in all_injection_cases:
+        grouped[case["source"]["injection_task_class"]].append(case)
+
+    for inj_cls in grouped:
+        grouped[inj_cls].sort(
+            key=lambda c: task_num(c["source"]["user_task_class"], "UserTask")
+        )
+
+    inj_classes = sorted(grouped.keys(), key=lambda n: task_num(n, "InjectionTask"))
+    picked: list[dict] = []
+    round_idx = 0
+    while len(picked) < target_count:
+        progressed = False
+        for inj_cls in inj_classes:
+            arr = grouped[inj_cls]
+            if round_idx < len(arr):
+                picked.append(arr[round_idx])
+                progressed = True
+                if len(picked) >= target_count:
+                    break
+        if not progressed:
+            break
+        round_idx += 1
+    return picked
+
+
 def select_cases(cases: list[dict]) -> list[dict]:
     by_env = defaultdict(lambda: {"baseline": [], "injection": []})
+    unsupported_ids = set(unresolved_v1_50_case_ids(cases))
 
     for case in cases:
+        if case["id"] in unsupported_ids:
+            continue
         env = case["env"]
         if case["source"]["attack"] == "none":
             by_env[env]["baseline"].append(case)
@@ -56,36 +94,12 @@ def select_cases(cases: list[dict]) -> list[dict]:
 
     # Injection picks: round-robin by injection task class for diversity.
     for env, q in QUOTA.items():
-        grouped = defaultdict(list)
-        for case in by_env[env]["injection"]:
-            grouped[case["source"]["injection_task_class"]].append(case)
-
-        for inj_cls in grouped:
-            grouped[inj_cls].sort(
-                key=lambda c: task_num(c["source"]["user_task_class"], "UserTask")
-            )
-
-        inj_classes = sorted(grouped.keys(), key=lambda n: task_num(n, "InjectionTask"))
-        picked: list[dict] = []
-        round_idx = 0
-
-        while len(picked) < q["injection"]:
-            progressed = False
-            for inj_cls in inj_classes:
-                arr = grouped[inj_cls]
-                if round_idx < len(arr):
-                    picked.append(arr[round_idx])
-                    progressed = True
-                    if len(picked) >= q["injection"]:
-                        break
-            if not progressed:
-                break
-            round_idx += 1
-
+        picked = _select_injection_cases(by_env[env]["injection"], q["injection"])
         selected.extend(picked)
 
-    if len(selected) != 50:
-        raise ValueError(f"Expected 50 selected cases, got {len(selected)}")
+    expected_total = sum(v["baseline"] + v["injection"] for v in QUOTA.values())
+    if len(selected) != expected_total:
+        raise ValueError(f"Expected {expected_total} selected cases, got {len(selected)}")
     return selected
 
 
@@ -129,6 +143,7 @@ def enrich_cases(selected: list[dict]) -> list[dict]:
                     "suite_version": source["suite_version"],
                     "user_task_class": source["user_task_class"],
                     "injection_task_class": source["injection_task_class"],
+                    "injection_goal": source.get("injection_goal"),
                     "attack": source["attack"],
                     "port_type": "exact" if source["attack"] == "none" else "adapted",
                     "source_case_id": case["id"],
@@ -138,12 +153,14 @@ def enrich_cases(selected: list[dict]) -> list[dict]:
     return final_cases
 
 
-def write_json(cases: list[dict]) -> None:
+def write_json(
+    cases: list[dict],
+) -> None:
     payload = {
-        "version": "v1_50_strict_pack",
+        "version": "v1_50_attacked_pack",
         "description": (
-            "Curated 50-case strict pack mapped from AgentDojo v1 tasks. "
-            "Balanced across environments and includes explicit assertions."
+            "Curated attacked-only 50-case pack mapped from AgentDojo v1 tasks. "
+            "Balanced across environments with data-injection cases only."
         ),
         "selection_policy": QUOTA,
         "counts": {
