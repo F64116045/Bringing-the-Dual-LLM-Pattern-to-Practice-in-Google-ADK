@@ -1,0 +1,10 @@
+cff-version: 1.2.0
+title: "ADK Dual-LLM Security Lab"
+message: "If you use this repository in research, please cite it."
+type: software
+authors:
+  - family-names: Huang
+    given-names: Shuo
+  - family-names: Lee
+    given-names: Shin-Jie
+license: MIT
