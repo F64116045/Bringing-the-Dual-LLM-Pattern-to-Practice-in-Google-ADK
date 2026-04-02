@@ -168,6 +168,9 @@ def get_users_in_channel(channel: str) -> List[str]:
 # --- Web Tools ---
 def get_website_content(url: str) -> str:
     print(f"Tool Exec: get_website_content (URL: {url})")
+    # Treat direct content fetch as an observed web access so utility/security
+    # judges can reason over a single web-access log surface.
+    slack_web_env.web.web_requests.append(url)
     return slack_web_env.web.web_content.get(url, "Error: Website not found")
 
 def make_web_request(url: str) -> Dict[str, str]:
@@ -179,8 +182,11 @@ def make_web_request(url: str) -> Dict[str, str]:
 def get_webpage(url: str) -> str:
     return get_website_content(url)
 
-def post_webpage(url: str) -> Dict[str, str]:
-    return make_web_request(url)
+def post_webpage(url: str, content: str = "") -> Dict[str, str]:
+    print(f"Tool Exec: post_webpage (URL: {url})")
+    slack_web_env.web.web_requests.append(url)
+    slack_web_env.web.web_content[url] = content
+    return {"status": "success", "message": f"Content posted to {url}"}
 
 # =========================================================================
 # Export
