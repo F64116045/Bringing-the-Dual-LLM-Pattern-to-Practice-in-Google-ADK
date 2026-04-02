@@ -24,13 +24,28 @@ def summarize(rows: list[dict[str, Any]]) -> dict[str, Any]:
     runtime_ok = sum(1 for r in rows if r.get("runtime_ok"))
 
     by_env: dict[str, dict[str, Any]] = defaultdict(lambda: {"total": 0, "status": Counter(), "utility_pass": 0, "security_breach": 0, "runtime_ok": 0})
+    by_attack: dict[str, dict[str, Any]] = defaultdict(
+        lambda: {
+            "total": 0,
+            "status": Counter(),
+            "utility_pass": 0,
+            "security_breach": 0,
+            "runtime_ok": 0,
+        }
+    )
     for r in rows:
         env = r.get("env", "unknown")
+        attack = r.get("attack_type", "unknown")
         by_env[env]["total"] += 1
         by_env[env]["status"][r.get("status", "unknown")] += 1
         by_env[env]["utility_pass"] += 1 if r.get("utility_pass") else 0
         by_env[env]["security_breach"] += 1 if r.get("security_breach") else 0
         by_env[env]["runtime_ok"] += 1 if r.get("runtime_ok") else 0
+        by_attack[attack]["total"] += 1
+        by_attack[attack]["status"][r.get("status", "unknown")] += 1
+        by_attack[attack]["utility_pass"] += 1 if r.get("utility_pass") else 0
+        by_attack[attack]["security_breach"] += 1 if r.get("security_breach") else 0
+        by_attack[attack]["runtime_ok"] += 1 if r.get("runtime_ok") else 0
 
     out = {
         "total": total,
@@ -44,10 +59,25 @@ def summarize(rows: list[dict[str, Any]]) -> dict[str, Any]:
             "runtime_ok": round(runtime_ok / total, 4) if total else 0.0,
         },
         "by_env": {},
+        "by_attack": {},
     }
     for env, data in sorted(by_env.items()):
         t = data["total"]
         out["by_env"][env] = {
+            "total": t,
+            "status": dict(data["status"]),
+            "utility_pass": data["utility_pass"],
+            "security_breach": data["security_breach"],
+            "runtime_ok": data["runtime_ok"],
+            "rates": {
+                "utility_pass": round(data["utility_pass"] / t, 4) if t else 0.0,
+                "security_breach": round(data["security_breach"] / t, 4) if t else 0.0,
+                "runtime_ok": round(data["runtime_ok"] / t, 4) if t else 0.0,
+            },
+        }
+    for attack, data in sorted(by_attack.items()):
+        t = data["total"]
+        out["by_attack"][attack] = {
             "total": t,
             "status": dict(data["status"]),
             "utility_pass": data["utility_pass"],
@@ -75,12 +105,14 @@ def find_latest_run() -> Path:
 def main() -> int:
     parser = argparse.ArgumentParser(description="Summarize benchmark JSONL results.")
     parser.add_argument("--baseline", help="Path to baseline JSONL.")
+    parser.add_argument("--dual-no-policy", help="Path to dual_no_policy JSONL.")
     parser.add_argument("--dual", help="Path to dual JSONL.")
     parser.add_argument("--output", help="Optional path to write summary JSON.")
     parser.add_argument("--latest-run", action="store_true", help="Use latest results/runs/<run-id> baseline/dual JSONL files.")
     args = parser.parse_args()
 
     baseline_path: Path | None = Path(args.baseline) if args.baseline else None
+    dual_no_policy_path: Path | None = Path(args.dual_no_policy) if args.dual_no_policy else None
     dual_path: Path | None = Path(args.dual) if args.dual else None
 
     if args.latest_run:
@@ -89,18 +121,28 @@ def main() -> int:
             candidate = run_dir / "baseline.jsonl"
             if candidate.exists():
                 baseline_path = candidate
+        if dual_no_policy_path is None:
+            candidate = run_dir / "dual_no_policy.jsonl"
+            if candidate.exists():
+                dual_no_policy_path = candidate
         if dual_path is None:
             candidate = run_dir / "dual.jsonl"
             if candidate.exists():
                 dual_path = candidate
 
-    if baseline_path is None and dual_path is None:
-        raise ValueError("Provide --baseline and/or --dual (or --latest-run).")
+    if baseline_path is None and dual_no_policy_path is None and dual_path is None:
+        raise ValueError("Provide --baseline/--dual-no-policy/--dual (or --latest-run).")
 
     summary: dict[str, Any] = {}
     if baseline_path is not None and baseline_path.exists():
         baseline_rows = load_jsonl(baseline_path)
         summary["baseline"] = {"path": str(baseline_path), "summary": summarize(baseline_rows)}
+    if dual_no_policy_path is not None and dual_no_policy_path.exists():
+        dual_no_policy_rows = load_jsonl(dual_no_policy_path)
+        summary["dual_no_policy"] = {
+            "path": str(dual_no_policy_path),
+            "summary": summarize(dual_no_policy_rows),
+        }
     if dual_path is not None and dual_path.exists():
         dual_rows = load_jsonl(dual_path)
         summary["dual"] = {"path": str(dual_path), "summary": summarize(dual_rows)}
