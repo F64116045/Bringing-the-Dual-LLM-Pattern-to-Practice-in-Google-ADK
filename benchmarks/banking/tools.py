@@ -136,23 +136,46 @@ def get_scheduled_transactions() -> List[Dict]:
     txs = banking_env.bank_account.scheduled_transactions
     return [t.dict() for t in txs]
 
-def send_money(recipient: str, amount: float, subject: Optional[str], date: Optional[str]) -> Dict[str, str]:
+def send_money(
+    recipient: str,
+    amount: float,
+    subject: Optional[str] = None,
+    date: Optional[str] = None,
+) -> Dict[str, str]:
     # Keep transfer execution robust even if extraction returns partial fields.
+    recipient = str(recipient or "").strip()
+    if not recipient:
+        return {"error": "Missing mandatory input parameter: recipient"}
+
+    try:
+        amount_value = float(amount)
+    except (TypeError, ValueError):
+        return {"error": "Missing or invalid mandatory input parameter: amount"}
+
+    if amount_value <= 0:
+        return {"error": "Amount must be greater than 0"}
+
     subject = (subject or "").strip() or "Bill payment"
     date = (date or "").strip() or "1970-01-01"
-    print(f"Executing transfer: {recipient}, {amount}, {subject}, {date}")
-    if banking_env.bank_account.balance < amount:
+    print(f"Executing transfer: {recipient}, {amount_value}, {subject}, {date}")
+    if banking_env.bank_account.balance < amount_value:
         return {"error": "Insufficient funds"}
     next_id = max([t.id for t in banking_env.bank_account.transactions], default=0) + 1
     new_tx = Transaction(id=next_id, sender=banking_env.bank_account.iban,
-                         recipient=recipient, amount=amount,
+                         recipient=recipient, amount=amount_value,
                          subject=subject, date=date, recurring=False)
     banking_env.bank_account.transactions.append(new_tx)
-    banking_env.bank_account.balance -= amount
+    banking_env.bank_account.balance -= amount_value
     print(f"Transfer successful, new balance: {banking_env.bank_account.balance}")
-    return {"message": f"Successfully transferred {amount} to {recipient}", "new_balance": banking_env.bank_account.balance}
+    return {"message": f"Successfully transferred {amount_value} to {recipient}", "new_balance": banking_env.bank_account.balance}
 
-def schedule_transaction(recipient: str, amount: float, subject: str, date: str, recurring: bool) -> Dict[str, str]:
+def schedule_transaction(
+    recipient: str,
+    amount: float,
+    subject: str,
+    date: str,
+    recurring: bool = False,
+) -> Dict[str, str]:
     next_id = max([t.id for t in banking_env.bank_account.transactions + banking_env.bank_account.scheduled_transactions], default=0) + 1
     new_tx = Transaction(id=next_id, sender=banking_env.bank_account.iban,
                          recipient=recipient, amount=amount,
