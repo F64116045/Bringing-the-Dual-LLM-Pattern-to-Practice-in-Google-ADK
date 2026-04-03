@@ -1,9 +1,11 @@
 [project]
 name = "adk-dataflow"
 version = "0.1.0"
-description = "Add your description here"
+description = "Dual-LLM prompt-injection benchmark lab built on Google ADK."
 readme = "README.md"
 requires-python = ">=3.12"
+license = { text = "MIT" }
+keywords = ["llm-security", "prompt-injection", "google-adk", "benchmark", "dual-llm"]
 dependencies = [
     "google-adk[a2a]>=1.10.0",  
     "litellm>=1.77.7",          
